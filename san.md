@@ -15,6 +15,8 @@
     - [Sub-LUN Automated Tiering](#sub-lun-automated-tiering)
     - [How automated tiering works](#how-automated-tiering-works)
   - [LUN Assignment Process](#lun-assignment-process)
+  - [How `SAN Array` sees `ESXi Hosts`](#how-san-array-sees-esxi-hosts)
+  - [Configure iSCSI Initiator (`esxi`)](#configure-iscsi-initiator-esxi)
 
 
 
@@ -227,3 +229,45 @@
     - You create VM 1 (a Windows Server) and assign it a 100GB hard drive ⇒ VMware creates a file called `VM1_Disk1.vmdk` inside `Datastore_Gold_01 `
 
     - Inside the guest operating system, Windows (VM 1) has no idea it's living on an HPE MSA SAN or inside a `.vmdk` file. It just sees a standard 100GB SCSI Disk and formats it as `C:\` 
+
+## How `SAN Array` sees `ESXi Hosts`
+
+- `SAN` maps the volume to a unique string identifier called an `IQN` (iSCSI Qualified Name) - NOT directly to the ESXi host's IP address (the `vmk` port)
+
+- Before you can map any volumes, two things must happen
+
+    - ESXi Host: Software iSCSI Adapter, IP, IQN (e.g., `iqn.1998-01.com.vmware:esxi01-1a2b3c4d`)
+
+    - SAN Array: Controller A/B Ports, IP ⇒ discover initiator IQN
+
+## Configure iSCSI Initiator (`esxi`)
+
+- Step A: Configure the iSCSI Initiator on ESXi 
+
+    - On the ESXi host, you turn on the `Software iSCSI Adapter` in vSphere
+
+    - VMware automatically generates a unique IQN for that host 
+
+    - Example IQN: `iqn.1998-01.com.vmware:esxi01-6f4a8b12` 
+
+    - You assign a static IP address to an ESXi `vmkernel` port dedicated to `iSCSI` (e.g., `192.168.10.50`)
+
+- Step B: The "Handshake" (Discovery)
+
+    - On `esxi`, under the `iSCSI` adapter settings, you enter the Controller IP addresses (e.g., `192.168.10.10` and `192.168.10.11`) as the Dynamic Target
+
+    - `esxi` sends a packet across the network saying: "Hello MSA, I am `iqn.1998-01.com.vmware:esxi01-6f4a8b12` coming from `192.168.10.50`. What storage do you have for me?"
+
+    - Once that ping occurs, the MSA logs that IQN in its Initiator Table
+
+- What You See in the SAN Web Interface
+
+    - Now when you log into the SAN Web GUI
+
+    - You navigate to the Hosts / Initiators section
+
+    - Under "Unassociated Initiators", you will see that incoming IQN (`iqn.1998-01.com.vmware:esxi01-...`)
+
+    - You create a Host Object (e.g., name it `ESXi_Host_01`) and bind that discovered IQN to it
+
+    - If you have multiple ESXi hosts in a cluster, you group them into a Host Group (e.g., `Prod_ESXi_Cluster`)
