@@ -17,6 +17,7 @@
   - [LUN Assignment Process](#lun-assignment-process)
   - [How `SAN Array` sees `ESXi Hosts`](#how-san-array-sees-esxi-hosts)
   - [Configure iSCSI Initiator (`esxi`)](#configure-iscsi-initiator-esxi)
+  - [DO NOT use one Giant Volume](#do-not-use-one-giant-volume)
 
 
 
@@ -271,3 +272,38 @@
     - You create a Host Object (e.g., name it `ESXi_Host_01`) and bind that discovered IQN to it
 
     - If you have multiple ESXi hosts in a cluster, you group them into a Host Group (e.g., `Prod_ESXi_Cluster`)
+
+## DO NOT use one Giant Volume
+
+- When it comes to volume sizing, you should NOT create just one giant volume that equals the entire pool size
+
+- Queuing & Queue Depth Bottlenecks
+
+    - Every LUN presented to an ESXi host has a hardware Queue Depth limit (typically 32 or 64 concurrent commands per LUN over iSCSI/Fibre Channel) 
+
+    - If you place 50 Virtual Machines on a single LUN, all 50 VMs must compete for that same 32/64 command queue slot. This leads to latency spikes (I/O queueing) during high-traffic periods 
+
+    - By splitting your pool into multiple volumes (LUNs), each volume gets its own dedicated queue, multiplying your available I/O throughput
+
+- Controller Balancing (Dual-Controller SANs)
+
+    - If you put everything into one pool and one volume owned by Controller A, Controller B handles zero active I/O traffic and sits underutilized
+
+    - Best practice is to create multiple volumes and split their ownership—half on Controller A (Pool A) and half on Controller B (Pool B)—so both hardware controllers share the processing load
+
+- Blast Radius & Recovery
+
+    - If a VMFS file system ever suffers corruption, or if a snapshot grows out of control and fills up a datastore
+
+    - One Giant LUN: Every single VM in the entire enterprise goes offline at once
+
+    - Multiple LUNs: Only the VMs on that specific LUN are affected; the rest of the infrastructure keeps running normally
+
+- Storage `VMotion` & Maintenance
+
+    - Having multiple datastores allows you to perform `Storage vMotion` (moving a VM's .vmdk disk files from one datastore to another with zero downtime) during storage maintenance
+
+- Recommended Sizing Strategy
+
+    ![Volume Sizing Strategy](images/volume_sizing_strategy.png)
+
