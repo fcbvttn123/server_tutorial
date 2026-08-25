@@ -10,6 +10,11 @@
   - [SAN, NAS, DAS](#san-nas-das)
   - [Disk Group, Storage Pool, Volume, LUN](#disk-group-storage-pool-volume-lun)
   - [Pool/Controller Management](#poolcontroller-management)
+  - [Automated Data Tiering](#automated-data-tiering)
+    - [Virtual Storage Pooling](#virtual-storage-pooling)
+    - [Sub-LUN Automated Tiering](#sub-lun-automated-tiering)
+    - [How automated tiering works](#how-automated-tiering-works)
+  - [LUN Assignment Process](#lun-assignment-process)
 
 
 
@@ -154,3 +159,71 @@
 - Example Enterprise Layout
 
     ![SAN Controller Enterprise Layout](images/san_controller_enterprise_layout.png)
+
+## Automated Data Tiering
+
+### Virtual Storage Pooling
+
+- When you create a volume from a storage pool, you do not manually pick Disk Group 1 or Disk Group 2 
+
+- From an administrative perspective:
+
+    - You select `Pool A` (or `Pool B`)
+
+    - You specify the volume size (e.g., 2TB)
+
+    - You present that volume to your host server as a `LUN`
+
+### Sub-LUN Automated Tiering
+
+- Even though you don't pick the disk group manually, the SAN itself keeps track of the drive types inside that pool using a feature called **Sub-LUN Automated Tiering** 
+
+- When you write data to a volume, the SAN doesn't just write it and leave it in one place forever
+
+- It dynamically relocates smaller chunks of data across different disk groups based on how often that data is used
+
+### How automated tiering works
+
+- Block Breakdown: The SAN Array divides your volume's data into small pages (typically 4MB chunks)
+
+- Access Tracking: The storage controllers continuously track how frequently each 4MB chunk is read or written
+
+- Auto-Tiering Promotion/Demotion:
+
+    - Hot Data: Frequently accessed blocks (like active database tables or boot drives) are automatically promoted up to the SSD Disk Group inside the pool
+
+    - Warm Data: Standard virtual machine OS drives sit in the 10K Enterprise SAS Disk Group
+
+    - Cold Data: Inactive data (like old snapshots or untouched log files) gets demoted down to the NL-SAS Disk Group to free up high-speed storage
+
+## LUN Assignment Process
+
+- You create a Volume in Pool A on the MSA (e.g., `MSA_Vol_Prod_01`, Size: 4TB)
+
+- You map that Volume as `LUN 10` to the `iSCSI IP addresses` or `FC WWNs` of your ESXi hosts
+
+    ![Map LUN to ESXi hosts](images/map_lun_to_esxi.png)
+
+- The SAN's job is now done. It just presents **a raw, unformatted 4TB SCSI disk** address over the network
+
+- On the ESXi host
+
+    - In VMware vCenter, you click "Rescan Storage."
+
+    - ESXi detects a new raw 4TB storage device at LUN 10
+
+    - You format this raw LUN with VMware's clustered file system called VMFS (Virtual Machine File System)
+
+        - Formatting raw `LUNs` with `VMFS` is the standard practice for almost all VMware environments
+
+        - VMFS: Standard file systems (like `NTFS` or `ext4`) can only be read/written by one server at a time
+        
+        - VMFS is special because it allows multiple ESXi hosts in a cluster to read and write to the exact same SAN volume simultaneously without corrupting data
+
+- Virtual Machine Side (`.VMDK` Files)
+
+    - Now that you have a 4TB Datastore, you don't assign the whole thing to one VM. You carve it up into Virtual Machine Disk (`.vmdk`) files 
+
+    - You create VM 1 (a Windows Server) and assign it a 100GB hard drive ⇒ VMware creates a file called `VM1_Disk1.vmdk` inside `Datastore_Gold_01 `
+
+    - Inside the guest operating system, Windows (VM 1) has no idea it's living on an HPE MSA SAN or inside a `.vmdk` file. It just sees a standard 100GB SCSI Disk and formats it as `C:\` 
