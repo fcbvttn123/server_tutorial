@@ -24,6 +24,10 @@
 - [Host Group](#host-group)
   - [Group Hosts and Share Volumes](#group-hosts-and-share-volumes)
   - [When to Avoid Sharing a Volume Across All Hosts](#when-to-avoid-sharing-a-volume-across-all-hosts)
+- [Configure iSCSI Initiator (`esxi`)](#configure-iscsi-initiator-esxi)
+  - [Step A: Configure the iSCSI Initiator on ESXi](#step-a-configure-the-iscsi-initiator-on-esxi)
+  - [Step B: The "Handshake" (Discovery)](#step-b-the-handshake-discovery)
+  - [What You See in the SAN Web Interface](#what-you-see-in-the-san-web-interface)
 
 
 
@@ -246,3 +250,38 @@
 - Security or Tenant Separation: If workloads require strict physical or logical isolation for compliance or multi-tenancy, separate distinct storage targets for specific hosts
 
 - Non-Shared Storage: If you are using local storage (DAS) inside each server instead of a centralized SAN or NAS, you cannot share the volume across hosts
+
+
+
+
+# Configure iSCSI Initiator (`esxi`)
+
+## Step A: Configure the iSCSI Initiator on ESXi 
+
+- On the ESXi host, you turn on the `Software iSCSI Adapter` in vSphere
+
+- VMware automatically generates a unique IQN for that host 
+
+- Example IQN: `iqn.1998-01.com.vmware:esxi01-6f4a8b12` 
+
+- You assign a static IP address to an ESXi `vmkernel` port dedicated to `iSCSI` (e.g., `192.168.10.50`)
+
+## Step B: The "Handshake" (Discovery)
+
+- On `esxi`, under the `iSCSI` adapter settings, you enter the Controller IP addresses (e.g., `192.168.10.10` and `192.168.10.11`) as the Dynamic Target
+
+- `esxi` sends a packet across the network saying: "Hello MSA, I am `iqn.1998-01.com.vmware:esxi01-6f4a8b12` coming from `192.168.10.50`. What storage do you have for me?"
+
+- Once that ping occurs, the MSA logs that IQN in its Initiator Table
+
+## What You See in the SAN Web Interface
+
+- Now when you log into the SAN Web GUI
+
+- You navigate to the Hosts / Initiators section
+
+- Under "Unassociated Initiators", you will see that incoming IQN (`iqn.1998-01.com.vmware:esxi01-...`)
+
+- You create a Host Object (e.g., name it `ESXi_Host_01`) and bind that discovered IQN to it
+
+- If you have multiple ESXi hosts in a cluster, you group them into a Host Group (e.g., `Prod_ESXi_Cluster`)
