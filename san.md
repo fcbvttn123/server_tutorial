@@ -5,7 +5,11 @@
   - [What it is](#what-it-is)
   - [Key Components: Initiators and Targets](#key-components-initiators-and-targets)
   - [Fiber Channel](#fiber-channel)
-  - [Networking Best Practices for iSCSI](#networking-best-practices-for-iscsi)
+- [iSCSI Network](#iscsi-network)
+  - [Basics](#basics)
+  - [MPIO](#mpio)
+  - [Path Discovery vs. Path Usage](#path-discovery-vs-path-usage)
+  - [ESXi iSCSI Port Binding](#esxi-iscsi-port-binding)
 - [SAN](#san)
   - [SAN, NAS, DAS](#san-nas-das)
   - [Disk Group, Storage Pool, Volume, LUN](#disk-group-storage-pool-volume-lun)
@@ -62,7 +66,10 @@
 
 - Fibre Channel is incredibly fast but requires expensive, dedicated optical switches, specialized Host Bus Adapter (HBA) cards, and separate cabling
 
-## Networking Best Practices for iSCSI
+
+# iSCSI Network
+
+## Basics
 
 - `iSCSI` traffic should live on its own isolated VLAN and use dedicated physical NICs (`vmnic`)
 
@@ -74,9 +81,39 @@
 
 - No Routing (Keep it Layer 2): iSCSI traffic should never pass through a router or firewall if it can be avoided
 
-- The ESXi host (vmk2) and the Storage Target should be on the exact same subnet/VLAN to minimize latency
+- The ESXi host (`vmk2`) and the Storage Target should be on the exact same subnet/VLAN to minimize latency
 
+## MPIO
 
+- Every physical storage interface (across both Controller A and Controller B) gets its own IP address
+
+- Every dedicated iSCSI VMkernel port (`vmk`) on the ESXi host gets its own IP address
+
+- Multipath I/O (MPIO) establishes active network paths between those ESXi VMkernel interfaces and the storage array ports
+
+- However, how those paths are utilized depends on whether your SAN operates in Active/Active or ALUA (Active/Passive) mode, and how port binding is configured on ESXi
+
+## Path Discovery vs. Path Usage
+
+- While MPIO discovers paths to all ports on both Controller A and Controller B, the host does not always send active I/O across every path simultaneously
+
+- `ALUA` (Asymmetric Logical Unit Access): Most enterprise dual-controller SANs use ALUA. A specific LUN/Datastore is "owned" by one controller (e.g., Controller A)
+
+    - **Active/Optimized Paths**: The paths going to Controller A are marked as Active/Optimized and carry the storage traffic
+
+    - **Active/Unoptimized Paths**
+    
+        - The paths going to Controller B exist, but traffic taking these paths must traverse the array's internal bus to get to Controller A, causing higher latency
+
+        - These paths remain passive standbys until Controller A fails
+
+- **True Active/Active**: If the SAN supports simultaneous processing across both controllers for the same LUN, traffic actively flows over paths to both controllers
+
+## ESXi iSCSI Port Binding
+
+- For ESXi to establish multiple sessions across all physical `NICs` and target IPs, Port Binding is typically configured on the `Software iSCSI Initiator`
+
+- You map each dedicated `vmk` port (e.g., `vmk1`, `vmk2`) to its own physical uplink (`vmnic`)
 
 
 # SAN

@@ -19,6 +19,8 @@
   - [Configuration Step](#configuration-step)
 - [MPIO (Multi-Path I/O)](#mpio-multi-path-io)
   - [What it is](#what-it-is-1)
+  - [Path Discovery vs. Path Usage](#path-discovery-vs-path-usage)
+  - [ESXi iSCSI Port Binding](#esxi-iscsi-port-binding)
   - [Path Selection Policies (PSP)](#path-selection-policies-psp)
   - [Configuration Step](#configuration-step-1)
 - [Host Group](#host-group)
@@ -217,6 +219,28 @@
 - MPIO understands block storage protocols, LUN ownership, and array path states (like ALUA)
 
 - MPIO can spread `read` and `write` commands across multiple active network links at the same time
+
+## Path Discovery vs. Path Usage
+
+- While MPIO discovers paths to all ports on both Controller A and Controller B, the host does not always send active I/O across every path simultaneously
+
+- `ALUA` (Asymmetric Logical Unit Access): Most enterprise dual-controller SANs use ALUA. A specific LUN/Datastore is "owned" by one controller (e.g., Controller A)
+
+    - **Active/Optimized Paths**: The paths going to Controller A are marked as Active/Optimized and carry the storage traffic
+
+    - **Active/Unoptimized Paths**
+    
+      - The paths going to Controller B exist, but traffic taking these paths must traverse the array's internal bus to get to Controller A, causing higher latency
+
+      - These paths remain passive standbys until Controller A fails
+
+- **True Active/Active**: If the SAN supports simultaneous processing across both controllers for the same LUN, traffic actively flows over paths to both controllers
+
+## ESXi iSCSI Port Binding
+
+- For ESXi to establish multiple sessions across all physical `NICs` and target IPs, Port Binding is typically configured on the `Software iSCSI Initiator`
+
+- You map each dedicated `vmk` port (e.g., `vmk1`, `vmk2`) to its own physical uplink (`vmnic`)
 
 ## Path Selection Policies (PSP)
 
