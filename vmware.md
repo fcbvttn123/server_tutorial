@@ -81,7 +81,19 @@
 
 ## VCSA is a VM
 
-- VCSA is a preconfigured VM that runs **management software** for VMware vSphere
+- VCSA is a **pre-configured VM** that runs **management software** for VMware vSphere
+
+- VCSA is the **centralized management plane** for VMware vSphere, it manages:
+
+  - **VM Lifecycle Management**: provisioning, cloning, template creation, snapshotted state rollbacks, and bulk power management across all hosts
+
+  - **Resource Optimization & HA**: shifting VMs across physical hosts using `vMotion` and `DRS` to balance load, and automatically restarting VMs via vSphere HA
+
+  - **Centralized Storage Management**: Provisioning shared VMFS datastores, vSAN pools, and managing storage policies across all connected storage arrays/SANs
+
+  - **Unified Virtual Networking**: managing vSphere Distributed Switches (`vDS`) so network policies, VLANs, and traffic shaping are consistent
+
+  - **Access Control & Lifecycle**: managing role-based access control (RBAC), integrating with identity providers (AD/Entra ID), and orchestrating rolling ESXi host updates via vSphere Lifecycle Manager (vLCM)
 
 - **VCSA is not an OS** ⇒ you do not create a blank VM, mount an ISO, and install VCSA manually like you would with a standard Windows or Linux VM
 
