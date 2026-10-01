@@ -12,6 +12,8 @@
 - [ESXi Ports](#esxi-ports)
   - [VMkernel Adapter (`vmk`)](#vmkernel-adapter-vmk)
   - [VM Port Group (`vNIC`) and `vmnic`](#vm-port-group-vnic-and-vmnic)
+- [vSS vs vDS](#vss-vs-vds)
+  - [vSS](#vss)
 - [NIC Teaming](#nic-teaming)
   - [What it is](#what-it-is)
   - [NIC Teaming Features](#nic-teaming-features)
@@ -145,6 +147,15 @@
 - `vNIC`: A virtual port group where VM plug their virtual network cards (vNICs) to reach the local LAN
 
 - `vmnic` (Physical NIC) ⇒ a physical Ethernet port on the back of the PowerEdge R760 host (e.g., vmnic0, vmnic1)
+
+
+
+
+# vSS vs vDS
+
+## vSS
+
+- A vSphere Standard Switch (`vSS`) exists entirely inside a single ESXi host
 
 
 
