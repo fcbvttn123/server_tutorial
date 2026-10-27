@@ -200,6 +200,22 @@
 
     ![SAN Controller Enterprise Layout](images/san_controller_enterprise_layout.png)
 
+        - Disk Group 1: 2x SSDs in RAID 1
+
+            - Performance Tiering: If the system is licensed for HPE’s Performance Auto-Tiering, this RAID 1 SSD pool operates as the **highest performance tier (Tier 0)**
+
+            - Frequently accessed data blocks ("hot data") are automatically moved up to these SSDs
+
+            - RAID 1 can be created with two drives; RAID 5 requires at least three
+
+            - Good write performance. Mirroring avoids the parity-update overhead associated with RAID 5
+
+        - Disk Group 2: 9x 10K SAS HDDs in RAID 5
+
+            - Offering cost-effective capacity compared to all-flash setups
+
+            - RAID 5 provides more usable capacity than RAID 1 or RAID 10 for the same number of equal-sized drives
+
 ## Automated Data Tiering
 
 ### Virtual Storage Pooling
