@@ -266,6 +266,8 @@
 
 ## ESXi iSCSI Port Binding
 
+![ESXi iSCSI Port Binding](images/esxi_iscsi_port_binding.png)
+
 - For ESXi to establish multiple sessions across all physical `NICs` and target IPs, Port Binding is typically configured on the `Software iSCSI Initiator`
 
 - You map each dedicated `vmk` port (e.g., `vmk1`, `vmk2`) to its own physical uplink (`vmnic`)
