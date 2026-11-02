@@ -181,23 +181,23 @@
 
 ## What it is
 
-- ESXi uses Virtual Switches (`vSwitches` or `vDS`) and NIC Teaming policies
+- ESXi uses Virtual Switches (`vSS` or `vDS`) and NIC Teaming policies
 
 - NIC Teaming ⇒ **one Virtual SW** can have multiple physical NICs (`vmnic`) plugged into it
 
     - One `vmnic` can only be plugged into one vSwitch at a time
     
-    - Multiple vSwitches cannot share the same physical NIC
+    - Multiple `vSwitches` cannot share the same physical NIC
 
 ## NIC Teaming Features
 
 - Route Based on Virtual Port ID (Default & Recommended)
 
-    - **How it works:** Each VM's virtual NIC (vNIC) is assigned to a specific physical NIC on the host when the VM powers on or connects
+    - **How it works:** Each VM's virtual NIC (`vNIC`) is assigned to a specific physical `vmnic` on the host when the VM powers on or connects
 
-    - **Behavior:** A single VM's traffic will only ever use one physical NIC at a time. If you have 10 VMs, 5 might go out Physical NIC 1 and 5 out Physical NIC 2
+    - **Behavior:** A single VM's traffic will use **only one `vmnic`** at a time. If you have 10 VMs, 5 might go out `vmnic1` and 5 out `vmnic2`
 
-    - **Failover:** If Physical NIC 1 fails, ESXi instantly moves those 5 VMs to Physical NIC 2
+    - **Failover:** If `vmnic1` fails, ESXi instantly moves those 5 VMs to `vmnic2`
 
 - Route Based on IP Hash (Requires Switch-Side LACP/LAG)
 
@@ -209,9 +209,9 @@
 
 - Explicit Failover Order (Active / Standby)
 
-    - **How it works:** Physical NIC 1 carries all VM traffic. Physical NIC 2 sits completely idle
+    - **How it works:** `vmnic1` carries all VM traffic. `vmnic2` sits completely idle
 
-    - **Behavior:** Physical NIC 2 only receives traffic if Physical NIC 1 physically loses link or fails network beacon probing
+    - **Behavior:** `vmnic2` only receives traffic if `vmnic1` physically loses link or fails network beacon probing
 
 ## A Typical Enterprise ESXi Network Setup
 
