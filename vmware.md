@@ -324,7 +324,9 @@
 
 ## Step A: Configure the iSCSI Initiator on ESXi 
 
-- On the ESXi host, you turn on the `Software iSCSI Adapter` in vSphere
+- On the ESXi host, you turn on the `Software iSCSI Adapter` in vSphere (e.g., `vmhba65`)
+
+  ![iSCSI Aapter](images/iscsi_adapter.png)
 
 - VMware automatically generates a unique IQN for that host 
 
