@@ -14,6 +14,7 @@
   - [VM Port Group (`vNIC`) and `vmnic`](#vm-port-group-vnic-and-vmnic)
 - [vSS vs vDS](#vss-vs-vds)
   - [vSS](#vss)
+  - [vDS](#vds)
 - [NIC Teaming](#nic-teaming)
   - [What it is](#what-it-is)
   - [NIC Teaming Features](#nic-teaming-features)
@@ -155,7 +156,23 @@
 
 ## vSS
 
-- A vSphere Standard Switch (`vSS`) exists entirely inside a single ESXi host
+- Scope: Operates at the individual ESXi host level
+
+- Management
+
+  - Must be configured and managed independently on each host
+
+  - If you have a 10-host cluster, you must manually create and replicate port groups and uplink settings on all 10 hosts
+
+## vDS
+
+- Scope: Operates across the entire vCenter Server datacenter level as a single, centralized aggregate object
+
+- Management
+
+  - Created once in vCenter
+  
+  - Any changes made to the distributed switch are automatically propagated to all member hosts joined to it
 
 
 
