@@ -334,6 +334,14 @@
 
 - You assign a static IP address to an ESXi `vmkernel` port dedicated to `iSCSI` (e.g., `192.168.10.50`)
 
+- Bind the VMK Port (Port Binding)
+
+  - Click on the Network Port Binding tab
+
+  - Click the Add (green plus sign) icon
+
+  - Select the desired VMkernel (vmk) adapter(s) from the list and click OK
+
 ## Step B: The "Handshake" (Discovery)
 
 - On `esxi`, under the `iSCSI` adapter settings, you enter the Controller IP addresses (e.g., `192.168.10.10` and `192.168.10.11`) as the Dynamic Target
