@@ -33,6 +33,10 @@
   - [Step A: Configure the iSCSI Initiator on ESXi](#step-a-configure-the-iscsi-initiator-on-esxi)
   - [Step B: The "Handshake" (Discovery)](#step-b-the-handshake-discovery)
   - [What You See in the SAN Web Interface](#what-you-see-in-the-san-web-interface)
+- [ESXi VMDK Files](#esxi-vmdk-files)
+- [Storage Overview](#storage-overview)
+  - [VM Creation and VM Files](#vm-creation-and-vm-files)
+  - [Thin vs Thick Provisioning](#thin-vs-thick-provisioning)
 
 
 
@@ -361,3 +365,52 @@
 - You create a Host Object (e.g., name it `ESXi_Host_01`) and bind that discovered IQN to it
 
 - If you have multiple ESXi hosts in a cluster, you group them into a Host Group (e.g., `Prod_ESXi_Cluster`)
+
+
+# ESXi VMDK Files
+
+# Storage Overview
+
+- Topology
+
+    ```bash
+    SAN Array
+    └─ LUN 01 (2 TB)
+
+    ESXi Host
+    └─ Sees LUN 01 as a Raw Disk
+    ```
+
+- The `san` administrator presents (exports) a **raw** `lun` to the esxi host
+
+- The administrator creates a `vmfs` datastore on the `esxi` host
+
+- Now inside `vcsa` we see: `Datastore01 (Capacity: 2 TB)`
+
+## VM Creation and VM Files
+
+- When we create a `vm`, `esxi` creates files inside the `vmfs` datastore, **NOT carving out a physical 100 GB `lun` from the `san`**
+
+    ```bash
+    Datastore01
+    ├─ SQL01/
+    │   ├─ SQL01.vmx
+    │   ├─ SQL01.vmdk
+    │   ├─ SQL01-flat.vmdk
+    │   ├─ vmware.log
+    │   └─ other files
+    ```
+
+- When you specify `Disk Size = 100 GB` => `esxi` creates a virtual disk: `SQL01.vmdk` and `SQL01-flat.vmdk`
+
+  - The `.vmdk` file itself is just **metadata**
+
+  - The actual data blocks usually live in `SQL01-flat.vmdk`, which can grow to approximately 100 GB (or consume less if thin provisioned)
+
+## Thin vs Thick Provisioning
+
+- When you specify 100 GB, VMware can allocate it in different ways
+
+- **Thick Provisioned:** 100 GB immediately reserved
+
+- **Thin Provisioned:** 100 GB requested - only 5 GB used initially - the VMDK grows
