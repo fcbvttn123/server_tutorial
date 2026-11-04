@@ -34,7 +34,7 @@
   - [Step B: The "Handshake" (Discovery)](#step-b-the-handshake-discovery)
   - [What You See in the SAN Web Interface](#what-you-see-in-the-san-web-interface)
 - [ESXi VMDK Files](#esxi-vmdk-files)
-- [Storage Overview](#storage-overview)
+  - [Storage Overview](#storage-overview)
   - [VM Creation and VM Files](#vm-creation-and-vm-files)
   - [Thin vs Thick Provisioning](#thin-vs-thick-provisioning)
 
@@ -369,7 +369,7 @@
 
 # ESXi VMDK Files
 
-# Storage Overview
+## Storage Overview
 
 - Topology
 
